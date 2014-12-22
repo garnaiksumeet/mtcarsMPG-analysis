@@ -1,0 +1,68 @@
+---
+output: html_document
+---
+# Mtcars Data Regression analysis
+
+## Executive Summary
+In this report, we present an analysis of the relationship between a set of variables and **mpg**. The data we have used was extracted from 1974 Motor Trend US magazine. This report is primarily focussed on two questions:
+
+* Is an automatic or manual transmission better for MPG
+* Quantify the MPG difference between automatic and manual transmissions
+
+## Exploratory Data Analysis
+The graphs for all the exploratory work is present in the **Appendix** section.
+For getting a preliminary knowledge regarding the dataset, we load the dataset into R.
+```{r, echo=TRUE, results='hide'}
+library(datasets); data(mtcars)
+```
+We check for any possible correlation between transmission type **am** and other variables and dependent variable **mpg** as shown in Fig.1. We also take a look at the correlation between transmission type and **mpg**. The value 0.5998324 indicates a positive correlation between **mpg** and **am**.
+```{r, echo=TRUE}
+cor(mtcars$am, mtcars$mpg)
+```
+### Is an automatic or manual transmission better for MPG?
+Since we have checked for correlation between variables and is difficult to verify which is better we perform a box plot analysis as shown in Fig.2 and conclude that manual is better for mpg than automatic.
+
+## Regression Model
+### Single Variable
+Since we have verified the positive correlation between **am** and **mpg** we consider the first model with only these two variables, $Y_{i} = \beta_{0} + X_{i}\beta_{1} + \epsilon_{i}$.
+
+#### Coefficient Interpretation:
+$\beta_{1}$ is the group mean for transmission, $\beta_{0}$ is the intercept and $\epsilon$ is the residual.
+```{r, echo=TRUE}
+fitSV <- lm(mtcars$mpg ~ mtcars$am); summary(fitSV)$coef; summary(fitSV)$adj
+```
+The above value correspond to the $R^{2}$, which means our model only explains 33.8% of the variance.
+
+### Multi-Variable
+To find a better fit we now use the variance inflation factor and correlation to determine the the variables for the model along with **am**. After checking the correlations with **mpg** we consider **cyl**, **disp**, **hp**, **wt** along with **am** as the variables for the model, $Y_{i} = \beta_{0} + X_{i_{1}}\beta_{1} + X_{i_{2}}\beta_{2} + X_{i_{3}}\beta_{3} + X_{i_{4}}\beta_{4} + X_{i_{5}}\beta_{5} + \epsilon_{i}$.
+
+#### Coefficient Interpretation:
+$\beta_{1}$, $\beta_{2}$, $\beta_{3}$, $\beta_{4}$, $\beta_{5}$ are the group mean for transmission, number of cylinders, displacement, horsepower, weight respectively. $\beta_{0}$ is the intercept and $\epsilon$ is the residual. 
+```{r, echo=TRUE}
+fitMV <- lm(mpg ~ am+cyl+disp+hp+wt, data = mtcars); summary(fitMV)$coef; summary(fitMV)$adj
+```
+The above value correspond to the $R^{2}$, which means our model explains 82.7% the variance. We are thus more likely to accept this as our model.
+The residual plots are presented in Fig.3 and the **residual summary** is given below:
+```{r, echo=TRUE}
+summary(fitMV$residuals)
+```
+The analysis of variance between the models is shown below:
+```{r, echo=TRUE, cache=TRUE}
+anova(fitMV, fitSV)
+```
+We observe that in the multi-variable model, the residuals are normally distributed and homoskedastic. Thus we conclude our report with the statement that it is better for **mpg** to have manual transmission and cars on an average have 1.55 **mpgs** more in case of **manual transmission** than **automatic transmission**. The entire summary of the accepted model i.e **multi-variable regression** is shown in the appendix.
+
+## Appendix
+```{r, echo=TRUE, cache=TRUE}
+require(graphics)
+pairs(mtcars, main = "Correlation", panel=panel.smooth); title(sub = "Fig.1")
+```
+```{r, echo=TRUE, cache=TRUE}
+with(mtcars, {plot(as.factor(am), mpg, main="MPG by transmissions", xlab="am", ylab="mpg")}); title(sub = "Fig.2")
+```
+```{r, echo=TRUE, cache=TRUE}
+par(mfrow = c(2, 2)); plot(fitMV, main = "Fig.3")
+```
+```{r, echo=TRUE, cache=TRUE}
+summary(fitMV)
+```
